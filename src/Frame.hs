@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, GADTs, DefaultSignatures, UndecidableInstances #-}
+{-# LANGUAGE RankNTypes, GADTs, DefaultSignatures, UndecidableInstances, ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
@@ -18,10 +18,13 @@ class FromNamedRecord a => Record a where
   parseNamedRecord = genericParseNamedRecord defaultOptions
 
 instance (Generic a, GFromNamedRecord (Rep a)) => FromNamedRecord a where
-  parseNamedRecord = genericParseNamedRecord defaultOptions
+    parseNamedRecord = genericParseNamedRecord defaultOptions
 
 data Frame a where
-  Frame :: {records :: (FromNamedRecord a) => V.Vector a} -> Frame a
+    Frame :: {records :: (FromNamedRecord a) => V.Vector a} -> Frame a
+
+data Column a where
+  Column :: {items :: V.Vector a} -> Column a
 
 instance (Show a, FromNamedRecord a) => Show (Frame a)
     where show f = unlines $ toList $ V.map show (records f)
@@ -32,8 +35,10 @@ type CsvFrame a = IO (Frame a)
 (!>) :: (FromNamedRecord a) => Frame a -> Int -> a
 (!>) f idx = records f V.! idx
 
-get :: (FromNamedRecord a) => (a -> b) -> Frame a -> V.Vector b
-get fn f = V.map fn $ records f
+row idx f = f !> idx
+
+col :: (FromNamedRecord a) => (a -> b) -> Frame a -> Column b
+col fn f = Column {items = V.map fn $ records f}
 
 readCsv :: (FromNamedRecord a) => String -> IO (Frame a)
 readCsv file = do
