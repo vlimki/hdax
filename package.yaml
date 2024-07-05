@@ -24,6 +24,8 @@ dependencies:
 - hmatrix
 - vector
 - text
+- cassava
+- bytestring
 
 ghc-options:
 - -Wall

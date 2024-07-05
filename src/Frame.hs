@@ -1,31 +1,44 @@
-{-# LANGUAGE GADTs, FlexibleInstances, UndecidableInstances, ConstraintKinds, TypeFamilies, MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes, GADTs, DefaultSignatures, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
-module Frame
-    ( Frame
-    , Column
-    , Value
-    , createFrame
-    ) where
+module Frame (Frame, (!>), readCsv, CsvFrame, get, Record) where
 
+import qualified Data.ByteString.Lazy as BL
+import Data.Csv hiding (Record)
 import qualified Data.Vector as V
-import Data.Dynamic
-import qualified Data.Text as T
-import Data.List (transpose)
+import GHC.Generics
+import Data.Vector (toList)
 
-class (Show a, Typeable a) => Value a
-instance Value Double
-instance Value T.Text
+class FromNamedRecord a => Record a where
+  parseNamedRecord :: NamedRecord -> Parser a
+  default parseNamedRecord :: (Generic a, GFromNamedRecord (Rep a)) => NamedRecord -> Parser a
+  parseNamedRecord = genericParseNamedRecord defaultOptions
 
-data Column = forall a. Value a => Column { name :: T.Text, values :: V.Vector a }
-instance Show Column where
-    show (Column n v) = unlines $ T.unpack n : V.toList (V.map show v)
+instance (Generic a, GFromNamedRecord (Rep a)) => FromNamedRecord a where
+  parseNamedRecord = genericParseNamedRecord defaultOptions
 
-newtype Frame = Frame [Column]
-instance Show Frame where
-    show (Frame cols) = unlines $ (map unwords . transpose) $ map printTranspose cols
+data Frame a where
+  Frame :: {records :: (FromNamedRecord a) => V.Vector a} -> Frame a
 
-printTranspose :: Column -> [String]
-printTranspose (Column n v) = T.unpack n : V.toList (V.map show v)
+instance (Show a, FromNamedRecord a) => Show (Frame a)
+    where show f = unlines $ toList $ V.map show (records f)
 
-createFrame :: (Value a) => [(T.Text, V.Vector a)] -> Frame
-createFrame = Frame . Prelude.map (\(n, v) -> Column {name=n, values=v} )
+--type CsvFrame a = IO (Either String (Frame a))
+type CsvFrame a = IO (Frame a)
+
+(!>) :: (FromNamedRecord a) => Frame a -> Int -> a
+(!>) f idx = records f V.! idx
+
+get :: (FromNamedRecord a) => (a -> b) -> Frame a -> V.Vector b
+get fn f = V.map fn $ records f
+
+readCsv :: (FromNamedRecord a) => String -> IO (Frame a)
+readCsv file = do
+    csvData <- BL.readFile file
+
+    case decodeByName csvData of
+        Left err -> error err
+        Right (_, v) -> return $ Frame {records=v}
