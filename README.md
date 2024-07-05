@@ -30,8 +30,20 @@ data Person = Person
 main :: IO ()
 main = do
     df <- readCsv "data/example.csv" :: CsvFrame Person
-
-    -- ["John","Mary","Erich]
-    let _names = get name df 
     return ()
+```
+
+```haskell 
+>>> get name df 
+["John","Mary","Erich"]
+```
+
+```haskell
+>>> df !> 0
+Person {name = "John", salary = 123123, age = 56}
+```
+
+```haskell
+>>> name $ df !> 0
+John
 ```
