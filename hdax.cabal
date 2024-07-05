@@ -27,7 +27,6 @@ library
   exposed-modules:
       Frame
       Lib
-      Test
   other-modules:
       Paths_hdax
   autogen-modules:
