@@ -26,6 +26,8 @@ dependencies:
 - text
 - cassava
 - bytestring
+- unordered-containers
+- hashable
 
 ghc-options:
 - -Wall

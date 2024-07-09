@@ -47,3 +47,6 @@ Person {name = "John", salary = 123123, age = 56}
 >>> name $ df !> 0
 John
 ```
+
+## Drawbacks
+Only supports CSV fields in camelCase or snake_case.

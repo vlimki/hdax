@@ -39,6 +39,20 @@ packages:
       size: 4019
   original:
     hackage: bytestring-0.11.5.3
+- completed:
+    hackage: unordered-containers-0.2.20@sha256:5a3e730fb548640f2ec050ec7517af67deede21de51e32bbebf6b7b222e6d0f5,3921
+    pantry-tree:
+      sha256: e124d3e17a760412629d670dccc24221cbb19d24ff442157e62620269cff0faa
+      size: 1647
+  original:
+    hackage: unordered-containers-0.2.20
+- completed:
+    hackage: hashable-1.4.4.0@sha256:ae22238274c572aa91e90c6c353e7206386708912ac5e6dc40ac61d1dcc553db,5216
+    pantry-tree:
+      sha256: cd91ec6f09475d2d0b2cf49565a488c21694be0d46bf29565f9258f5f41a3a84
+      size: 1249
+  original:
+    hackage: hashable-1.4.4.0
 snapshots:
 - completed:
     sha256: 8e7996960d864443a66eb4105338bbdd6830377b9f6f99cd5527ef73c10c01e7

@@ -1,5 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
-module Lib (Frame, readCsv, CsvFrame, Record, get, Passenger) where
+module Lib () where
 
 -- Write a proper test suite later instead of doing stuff here
 import Frame
@@ -10,21 +9,6 @@ import GHC.Generics
 --    , salary :: Double
 --    , age :: Double
 --    } deriving (Show, Generic, Record)
-
-data Passenger = Passenger {
-    passengerId :: Double,
-    survived :: Double,
-    pclass :: Double,
-    name :: String,
-    sex :: String,
-    age :: Maybe Double,
-    sibSp :: Double,
-    parch :: Double,
-    ticket :: !String,
-    fare :: !Double,
-    cabin :: Maybe String,
-    embarked :: !String
-} deriving (Show, Generic, Record)
 
 --main :: IO ()
 --main = do
