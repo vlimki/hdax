@@ -12,8 +12,7 @@ Mary,56000,32
 Erich,3200,29
 ```
 
-We can parse it and convert it to a dataframe with very little boilerplate:
-
+### Reading data into a DataFrame
 ```haskell
 module Main (main) where
 
@@ -24,21 +23,25 @@ main = do
     return ()
 ```
 
+### Columns
 ```haskell 
 -- NOTE: The type for the `col` function must ALWAYS be explicitly specified
 >>> col "name" df :: Series String
 ["John","Mary","Erich"]
 ```
 
+### Indexing
 ```haskell
+-- This returns a hashmap. Probably will have to implement something better soon.
 >>> df !> 0
-Person {name = "John", salary = 123123, age = 56}
+fromList [("salary",VInt 123123),("name",VString "John"),("age",VInt 56)]
 ```
 
+### `hmatrix` Integration
 ```haskell
->>> name $ df !> 0
-John
+>>> toHMatrix $ cols ["salary", "age"] df
+(3><2)
+ [ 123123.0, 56.0
+ ,  56000.0, 32.0
+ ,   3200.0, 29.0 ]
 ```
-
-## Drawbacks
-Only supports CSV fields in camelCase or snake_case.
