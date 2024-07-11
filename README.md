@@ -25,7 +25,7 @@ main = do
 
 ### Columns
 ```haskell 
--- NOTE: The type for the `col` function must ALWAYS be explicitly specified
+-- NOTE: The type for the `col` function must ALWAYS be explicitly specified.
 >>> col "name" df :: Series String
 ["John","Mary","Erich"]
 ```
@@ -39,6 +39,7 @@ fromList [("salary",VInt 123123),("name",VString "John"),("age",VInt 56)]
 
 ### `hmatrix` Integration
 ```haskell
+-- This matrix can be fed directly to a machine learning model, for example.
 >>> toHMatrix $ cols ["salary", "age"] df
 (3><2)
  [ 123123.0, 56.0
