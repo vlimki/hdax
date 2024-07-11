@@ -1,9 +1,8 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE DefaultSignatures #-}
 
-module Frame (readCsv, Frame, Value, col, row, Series, cols, toHMatrix) where
+module Frame (readCsv, Frame, Value, col, row, Series, cols, toHMatrix, (!>)) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (mzero)
@@ -56,6 +55,7 @@ instance CsvField Int where
 
 instance CsvField Double where
   convert (VDouble x) = x
+  convert (VInt x) = fromIntegral x
   convert _ = error "Invalid conversion"
 
 instance CsvField String where
@@ -96,6 +96,9 @@ toHMatrix (Frame h recs) = (c><r) $ Prelude.concat $ V.toList (V.map (Prelude.ma
 
 row :: Int -> Frame -> Rec
 row idx (Frame _ r) = r V.! idx
+
+(!>) :: Frame -> Int -> Rec
+(!>) = flip row
 
 readCsv :: String -> IO Frame
 readCsv file = do

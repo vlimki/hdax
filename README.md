@@ -15,26 +15,18 @@ Erich,3200,29
 We can parse it and convert it to a dataframe with very little boilerplate:
 
 ```haskell
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 module Main (main) where
-
-import Frame -- Gotta figure out the actual package uploading and module names later lol
-import GHC.Generics (Generic)
-
-data Person = Person
-    { name :: String
-    , salary :: Int
-    , age :: Int
-    } deriving (Show, Generic, Record)
 
 main :: IO ()
 main = do
-    df <- readCsv "data/example.csv" :: CsvFrame Person
+    -- Returns a `Frame` object
+    df <- readCsv "data/example.csv"
     return ()
 ```
 
 ```haskell 
->>> get name df 
+-- NOTE: The type for the `col` function must ALWAYS be explicitly specified
+>>> col "name" df :: Series String
 ["John","Mary","Erich"]
 ```
 
