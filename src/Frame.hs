@@ -1,8 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE DefaultSignatures #-}
 
-module Frame (readCsv, Frame, Value, col, row, Series, cols, toHMatrix, (!>)) where
+module Frame (readCsv, Frame, Value, col, row, Series, cols, toHMatrix, (!>), field, Frame.filter) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (mzero)
@@ -19,6 +18,7 @@ import Data.Vector as V
 import GHC.Generics hiding (R)
 import Text.Read (readMaybe)
 import Numeric.LinearAlgebra (Matrix, (><), R)
+import Data.Csv (FromNamedRecord)
 
 data Value = VInt Int | VDouble Double | VString String | VBool Bool
   deriving (Show, Eq, Generic)
@@ -73,31 +73,40 @@ valueToR v = case v of
   VString x -> read x
   VBool x -> if x then 1.0 else 0.0
 
-type Rec = M.HashMap T.Text Value
+newtype Record = Record { inner :: M.HashMap T.Text Value } deriving (Show, Eq)
+
+instance FromNamedRecord Record   where
+  parseNamedRecord r = Record <$> Csv.parseNamedRecord r
+
+field :: (CsvField a) => T.Text -> Record -> a
+field s r = Frame.convert $ fromMaybe (error "Invalid field") $ M.lookup s $ inner r
 
 data Frame = Frame
   { headers :: V.Vector T.Text,
-    records :: V.Vector Rec
+    records :: V.Vector Record
   }
   deriving (Show, Eq)
 
 type Series a = V.Vector a
 
 col :: (CsvField a) => T.Text -> Frame -> Series a
-col c (Frame _ recs) = V.map (Frame.convert . fromMaybe (error "Invalid column") . M.lookup c) recs
+col c (Frame _ recs) = V.map (Frame.convert . fromMaybe (error "Invalid column") . M.lookup c) $ V.map inner recs
 
 cols :: [T.Text] -> Frame -> Frame
-cols c (Frame _ recs) = Frame { headers = V.fromList c, records = V.map (M.filterWithKey (\k _ -> k `Prelude.elem` c)) recs }
+cols c (Frame _ recs) = Frame { headers = V.fromList c, records = V.map (\r -> Record{inner=r}) $ V.map (M.filterWithKey (\k _ -> k `Prelude.elem` c)) $ V.map inner recs }
+
+filter :: (Record -> Bool) -> Frame -> Frame
+filter f (Frame h recs) = Frame{headers=h, records=V.filter f recs}
 
 toHMatrix :: Frame -> Matrix R
-toHMatrix (Frame h recs) = (c><r) $ Prelude.concat $ V.toList (V.map (Prelude.map valueToR . M.elems) recs) :: Matrix R
+toHMatrix (Frame h recs) = (c><r) $ Prelude.concat $ V.toList (V.map (Prelude.map valueToR . M.elems) $ V.map inner recs) :: Matrix R
   where
     (r, c) = (V.length h, V.length recs)
 
-row :: Int -> Frame -> Rec
+row :: Int -> Frame -> Record
 row idx (Frame _ r) = r V.! idx
 
-(!>) :: Frame -> Int -> Rec
+(!>) :: Frame -> Int -> Record
 (!>) = flip row
 
 readCsv :: String -> IO Frame
