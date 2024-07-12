@@ -3,7 +3,6 @@
 module Lib () where
 
 -- Write a proper test suite later instead of doing stuff here
-import Frame
 import GHC.Generics
 
 data Person = Person

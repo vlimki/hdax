@@ -27,6 +27,8 @@ library
   exposed-modules:
       Frame
       Lib
+      Record
+      Series
   other-modules:
       Paths_hdax
   autogen-modules:
