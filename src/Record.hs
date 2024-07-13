@@ -71,12 +71,12 @@ instance CsvField String where
   convert (VInt x) = show x
   convert (VDouble x) = show x
   convert (VBool x) = show x
+  -- TODO: The following line will probably cause problems eventually, implement a separate function for formatting CsvFields for printing.
   convert VNone = ""
   toValue = VString
 
 instance CsvField Bool where
   convert (VBool x) = x
-  convert VNone = False
   convert _ = error "Invalid conversion"
   toValue = VBool
 
