@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+
 
 module Frame (readCsv, Frame, Value, col, row, Series, cols, toHMatrix, (!>), field, Frame.filter) where
 
@@ -12,12 +14,21 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Vector as V
 import Numeric.LinearAlgebra (Matrix, (><), R)
+import Data.List (sortBy)
 
 data Frame = Frame
   { headers :: V.Vector T.Text,
     records :: V.Vector Record
   }
-  deriving (Show, Eq)
+  deriving (Eq)
+
+instance Show Frame where
+  show (Frame h recs) = unwords (V.toList $ V.map T.unpack h) Prelude.++ "\n" Prelude.++ unlines (V.toList $ V.map format recs)
+    where
+      format :: Record -> String
+      format (Record m) = unwords $ Prelude.map (\(_, v) -> show v) $ sortCols $ Prelude.zip (M.keys m) (M.elems m)
+      getColumnIndex x = fromMaybe (error "Not possible") $ elemIndex x h
+      sortCols = sortBy (\(ka, _) (kb, _) -> compare (getColumnIndex ka) (getColumnIndex kb))
 
 col :: (CsvField a) => T.Text -> Frame -> Series a
 col c (Frame _ recs) = V.map (Record.convert . fromMaybe (error "Invalid column") . M.lookup c) $ V.map inner recs

@@ -45,7 +45,14 @@ instance CsvField Bool where
   convert _ = error "Invalid conversion"
 
 data Value = VInt Int | VDouble Double | VString String | VBool Bool
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Generic)
+
+instance Show Value
+  where 
+    show (VDouble x) = show x
+    show (VInt x) = show x
+    show (VString x) = x
+    show (VBool x) = show x
 
 instance Hashable Value
 

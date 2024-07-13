@@ -1,9 +1,12 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Lib () where
+module Lib (Frame, Record, Series, readCsv, col, row, Frame.filter) where
 
 -- Write a proper test suite later instead of doing stuff here
 import GHC.Generics
+import Frame
+import Record
+import Series
 
 data Person = Person
   { name :: String
