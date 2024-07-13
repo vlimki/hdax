@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Record (Record (..), convert, Value, CsvField, valueToR, field, fieldMaybe, toValue) where
+module Record (Record (..), convert, Value, CsvField, valueToR, field, fieldMaybe, toValue, isNull, set) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (mzero)
@@ -32,6 +32,14 @@ instance Csv.FromNamedRecord Record where
 
 field :: (CsvField a) => T.Text -> Record -> a
 field s r = Record.convert $ fromMaybe (error "Invalid field") $ M.lookup s $ inner r
+
+set :: (CsvField a) => T.Text -> a -> Record -> Record
+set k v (Record i) = Record{inner=M.insert k (toValue v) i}
+
+isNull :: T.Text -> Record -> Bool
+isNull s r = case fromMaybe (error "Invalid field") $ M.lookup s (inner r) of
+  VNone -> True
+  _ -> False
 
 fieldMaybe :: (CsvField a) => T.Text -> Record -> Maybe a
 fieldMaybe s r = case M.lookup s $ inner r of
@@ -103,7 +111,7 @@ instance Csv.FromField Value where
 
       parseAsString :: BS.ByteString -> Csv.Parser Value
       parseAsString s = pure (if val == "" then VNone else VString val)
-        where 
+        where
           val = BSC.unpack s
 
 valueToR :: Value -> R
