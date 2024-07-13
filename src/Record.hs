@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Record (Record (..), convert, Value, CsvField, valueToR, field) where
+module Record (Record (..), convert, Value, CsvField, valueToR, field, fieldMaybe) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (mzero)
@@ -23,6 +23,9 @@ instance Csv.FromNamedRecord Record where
 
 field :: (CsvField a) => T.Text -> Record -> a
 field s r = Record.convert $ fromMaybe (error "Invalid field") $ M.lookup s $ inner r
+
+fieldMaybe :: (CsvField a) => T.Text -> Record -> Maybe a
+fieldMaybe s r = fmap Record.convert $ M.lookup s $ inner r
 
 class CsvField a where
   convert :: Value -> a
