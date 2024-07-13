@@ -1,24 +1,23 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
-
+{-# LANGUAGE FlexibleInstances #-}
 
 module Frame (readCsv, Frame, Value, col, row, Series, cols, toHMatrix, (!>), field, Frame.filter) where
 
-import Record
-import Series
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
 import qualified Data.HashMap.Strict as M
+import Data.List (sortBy)
 import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Vector as V
-import Numeric.LinearAlgebra (Matrix, (><), R)
-import Data.List (sortBy)
+import Numeric.LinearAlgebra (Matrix, R, (><))
+import Record
+import Series
 
 data Frame = Frame
-  { headers :: V.Vector T.Text,
-    records :: V.Vector Record
+  { headers :: V.Vector T.Text
+  , records :: V.Vector Record
   }
   deriving (Eq)
 
@@ -34,13 +33,13 @@ col :: (CsvField a) => T.Text -> Frame -> Series a
 col c (Frame _ recs) = V.map (Record.convert . fromMaybe (error "Invalid column") . M.lookup c) $ V.map inner recs
 
 cols :: [T.Text] -> Frame -> Frame
-cols c (Frame _ recs) = Frame { headers = V.fromList c, records = V.map (\r -> Record{inner=r}) $ V.map (M.filterWithKey (\k _ -> k `Prelude.elem` c)) $ V.map inner recs }
+cols c (Frame _ recs) = Frame{headers = V.fromList c, records = V.map (\r -> Record{inner = r}) $ V.map (M.filterWithKey (\k _ -> k `Prelude.elem` c)) $ V.map inner recs}
 
 filter :: (Record -> Bool) -> Frame -> Frame
-filter f (Frame h recs) = Frame{headers=h, records=V.filter f recs}
+filter f (Frame h recs) = Frame{headers = h, records = V.filter f recs}
 
 toHMatrix :: Frame -> Matrix R
-toHMatrix (Frame h recs) = (c><r) $ Prelude.concat $ V.toList (V.map (Prelude.map valueToR . M.elems) $ V.map inner recs) :: Matrix R
+toHMatrix (Frame h recs) = (c >< r) $ Prelude.concat $ V.toList (V.map (Prelude.map valueToR . M.elems) $ V.map inner recs) :: Matrix R
   where
     (r, c) = (V.length h, V.length recs)
 
@@ -56,4 +55,4 @@ readCsv file = do
 
   case Csv.decodeByName csvData of
     Left err -> error err
-    Right (h, v) -> return Frame {records = v, headers = V.map TE.decodeUtf8 h}
+    Right (h, v) -> return Frame{records = v, headers = V.map TE.decodeUtf8 h}

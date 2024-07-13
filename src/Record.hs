@@ -1,14 +1,14 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Record (Record(..), convert, Value, CsvField, valueToR, field) where
+module Record (Record (..), convert, Value, CsvField, valueToR, field) where
 
-import Data.HashMap.Strict as M
-import qualified Data.Csv as Csv
 import Control.Applicative ((<|>))
 import Control.Monad (mzero)
 import Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
+import qualified Data.Csv as Csv
+import Data.HashMap.Strict as M
 import Data.Hashable
 import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
@@ -16,9 +16,9 @@ import GHC.Generics hiding (R)
 import Numeric.LinearAlgebra (R)
 import Text.Read (readMaybe)
 
-newtype Record = Record { inner :: M.HashMap T.Text Value } deriving (Show, Eq)
+newtype Record = Record {inner :: M.HashMap T.Text Value} deriving (Show, Eq)
 
-instance Csv.FromNamedRecord Record   where
+instance Csv.FromNamedRecord Record where
   parseNamedRecord r = Record <$> Csv.parseNamedRecord r
 
 field :: (CsvField a) => T.Text -> Record -> a
@@ -47,12 +47,11 @@ instance CsvField Bool where
 data Value = VInt Int | VDouble Double | VString String | VBool Bool
   deriving (Eq, Generic)
 
-instance Show Value
-  where 
-    show (VDouble x) = show x
-    show (VInt x) = show x
-    show (VString x) = x
-    show (VBool x) = show x
+instance Show Value where
+  show (VDouble x) = show x
+  show (VInt x) = show x
+  show (VString x) = x
+  show (VBool x) = show x
 
 instance Hashable Value
 
@@ -77,11 +76,9 @@ instance Csv.FromField Value where
       parseAsString :: BS.ByteString -> Csv.Parser Value
       parseAsString s = pure (VString $ BSC.unpack s)
 
-
 valueToR :: Value -> R
 valueToR v = case v of
   VInt x -> fromIntegral x
   VDouble x -> x
   VString x -> read x
   VBool x -> if x then 1.0 else 0.0
-
