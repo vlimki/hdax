@@ -25,7 +25,7 @@ data Frame = Frame
 
 instance Show Frame where
   show (Frame h recs) =
-    unwords (zipWith padRight longest $ V.toList $ V.map T.unpack h) ++ "\n" ++ unlines (V.toList $ V.map format recs)
+    init $ unwords (zipWith padRight longest $ V.toList $ V.map T.unpack h) ++ "\n" ++ unlines (V.toList $ V.map format recs)
     where
       format :: Record -> String
       format (Record m) = unwords $ zipWith (\(_, v) len -> padRight len (show v)) (sortCols $ zip (M.keys m) (M.elems m)) longest

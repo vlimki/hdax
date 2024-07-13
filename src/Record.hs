@@ -17,15 +17,14 @@ import qualified Data.Text as T
 import GHC.Generics hiding (R)
 import Numeric.LinearAlgebra (R)
 import Text.Read (readMaybe)
-import Data.Semigroup ((<>))
 
 newtype Record = Record {inner :: M.HashMap T.Text Value} deriving (Eq)
 
 instance Show Record where
-  show (Record inner) = T.unpack $ "Record { " <> (T.intercalate ", " $ formattedKvPairs) <> " }"
+  show (Record i) = T.unpack $ "Record { " <> T.intercalate ", " formattedKvPairs <> " }"
     where
       kvPairs :: [(T.Text, T.Text)]
-      kvPairs = (Prelude.zip (M.keys inner) (Prelude.map (T.pack . (convert @String)) $ M.elems inner))
+      kvPairs = Prelude.zip (M.keys i) (Prelude.map (T.pack . (convert @String)) $ M.elems i)
       formattedKvPairs = Prelude.map (\(k,v) -> k <> ": " <> v) kvPairs
 
 instance Csv.FromNamedRecord Record where
@@ -35,7 +34,11 @@ field :: (CsvField a) => T.Text -> Record -> a
 field s r = Record.convert $ fromMaybe (error "Invalid field") $ M.lookup s $ inner r
 
 fieldMaybe :: (CsvField a) => T.Text -> Record -> Maybe a
-fieldMaybe s r = fmap Record.convert $ M.lookup s $ inner r
+fieldMaybe s r = case M.lookup s $ inner r of
+  Just v -> case v of
+    VNone -> Nothing
+    x -> Just $ convert x
+  Nothing -> Nothing
 
 class CsvField a where
   convert :: Value -> a
@@ -43,12 +46,14 @@ class CsvField a where
 
 instance CsvField Int where
   convert (VInt x) = x
+  convert VNone = 0
   convert _ = error "Invalid conversion"
   toValue = VInt
 
 instance CsvField Double where
   convert (VDouble x) = x
   convert (VInt x) = fromIntegral x
+  convert VNone = 0
   convert _ = error "Invalid conversion"
   toValue = VDouble
 
@@ -57,14 +62,16 @@ instance CsvField String where
   convert (VInt x) = show x
   convert (VDouble x) = show x
   convert (VBool x) = show x
+  convert VNone = ""
   toValue = VString
 
 instance CsvField Bool where
   convert (VBool x) = x
+  convert VNone = False
   convert _ = error "Invalid conversion"
   toValue = VBool
 
-data Value = VInt Int | VDouble Double | VString String | VBool Bool
+data Value = VInt Int | VDouble Double | VString String | VBool Bool | VNone
   deriving (Eq, Generic)
 
 instance Show Value where
@@ -72,6 +79,7 @@ instance Show Value where
   show (VInt x) = show x
   show (VString x) = x
   show (VBool x) = show x
+  show VNone = ""
 
 instance Hashable Value
 
@@ -94,7 +102,9 @@ instance Csv.FromField Value where
         _ -> mzero
 
       parseAsString :: BS.ByteString -> Csv.Parser Value
-      parseAsString s = pure (VString $ BSC.unpack s)
+      parseAsString s = pure (if val == "" then VNone else VString val)
+        where 
+          val = BSC.unpack s
 
 valueToR :: Value -> R
 valueToR v = case v of
@@ -102,3 +112,4 @@ valueToR v = case v of
   VDouble x -> x
   VString x -> read x
   VBool x -> if x then 1.0 else 0.0
+  VNone -> error "Empty values. Maybe will just set them to 0 in the future"
