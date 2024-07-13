@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna) where
+module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna, Frame.drop) where
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
@@ -40,6 +40,14 @@ instance Show Frame where
 
 padRight :: Int -> String -> String
 padRight len str = str ++ replicate (len - Prelude.length str + 1) ' '
+
+drop :: [T.Text] -> Frame -> Frame
+drop columns (Frame hs recs) = Frame{headers=V.filter (\h -> not $ h `elem` columns) hs, records=dropHelper columns recs}
+  where 
+    dropHelper :: [T.Text] -> V.Vector Record -> V.Vector Record
+    dropHelper [c] rs = V.map (\r -> del c r) rs
+    dropHelper [] rs = rs
+    dropHelper (c:cs) rs = dropHelper cs (V.map (\r -> del c r) rs)
 
 dropna :: T.Text -> Frame -> Frame
 dropna c df@(Frame _ recs) = df{records = V.filter (isJust . fieldMaybe @String c) recs}
