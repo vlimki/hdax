@@ -42,9 +42,8 @@ main = do
 
 ### Indexing
 ```haskell
--- This returns a hashmap. Probably will have to implement something better soon.
->>> df !> 0
-fromList [("salary",VInt 123123),("name",VString "John"),("age",VInt 56)]
+>>> df !> 0 -- or `row 0 df`
+Record { salary: 123123, name: John, age: 56 }
 ```
 
 ### `hmatrix` Integration
