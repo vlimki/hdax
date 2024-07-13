@@ -28,6 +28,7 @@ main = do
 -- NOTE: The type for the `col` function must ALWAYS be explicitly specified.
 >>> col "name" df :: Series String
 ["John","Mary","Erich"]
+```
 
 ```haskell
 -- Note `Double` infers the type of the `mean` function, and not the type of `col "age" df`.
