@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Record (Record (..), convert, Value, CsvField, valueToR, field, fieldMaybe) where
+module Record (Record (..), convert, Value, CsvField, valueToR, field, fieldMaybe, toValue) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (mzero)
@@ -29,25 +29,30 @@ fieldMaybe s r = fmap Record.convert $ M.lookup s $ inner r
 
 class CsvField a where
   convert :: Value -> a
+  toValue :: a -> Value
 
 instance CsvField Int where
   convert (VInt x) = x
   convert _ = error "Invalid conversion"
+  toValue = VInt
 
 instance CsvField Double where
   convert (VDouble x) = x
   convert (VInt x) = fromIntegral x
   convert _ = error "Invalid conversion"
+  toValue = VDouble
 
 instance CsvField String where
   convert (VString x) = x
   convert (VInt x) = show x
   convert (VDouble x) = show x
   convert (VBool x) = show x
+  toValue = VString
 
 instance CsvField Bool where
   convert (VBool x) = x
   convert _ = error "Invalid conversion"
+  toValue = VBool
 
 data Value = VInt Int | VDouble Double | VString String | VBool Bool
   deriving (Eq, Generic)

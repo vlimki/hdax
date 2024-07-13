@@ -2,12 +2,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Frame (readCsv, Frame, Value, col, row, Series, cols, rows, toHMatrix, (!>), field, Frame.filter, dropna) where
+module Frame (readCsv, Frame, Value, col, row, Series, cols, rows, toHMatrix, (!>), field, Frame.filter, dropna, fillna) where
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
 import qualified Data.HashMap.Strict as M
-import Data.Maybe (fromMaybe, isJust)
+import Data.Maybe (fromMaybe, isJust, isNothing)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Vector as V
@@ -44,6 +44,9 @@ padRight len str = str ++ replicate (len - length str + 1) ' '
 
 dropna :: T.Text -> Frame -> Frame
 dropna c df@(Frame _ recs) = df{records=V.filter (isJust . fieldMaybe @String c) recs}
+
+fillna :: (CsvField a) => T.Text -> a -> Frame -> Frame
+fillna c v df@(Frame _ recs) = df{records=V.map (\x -> Record{inner=if isNothing (M.lookup c x) then M.insert c (toValue v) x else x}) $ V.map inner recs}
 
 col :: (CsvField a) => T.Text -> Frame -> Series a
 col c (Frame _ recs) = V.map (Record.convert . fromMaybe (error "Invalid column") . M.lookup c) $ V.map inner recs
