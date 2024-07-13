@@ -38,7 +38,9 @@ instance CsvField Double where
 
 instance CsvField String where
   convert (VString x) = x
-  convert _ = error "Invalid conversion"
+  convert (VInt x) = show x
+  convert (VDouble x) = show x
+  convert (VBool x) = show x
 
 instance CsvField Bool where
   convert (VBool x) = x
