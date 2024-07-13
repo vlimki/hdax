@@ -28,17 +28,29 @@ Philipp          27
 ```haskell 
 -- NOTE: The type for the `col` function must ALWAYS be explicitly specified.
 >>> col "name" df :: Series String
-["John","Mary","Erich"]
+["John", "Mary", "Erich", "Philipp"]
 ```
 
 ```haskell
+>>> drop ["name", "salary"] df
+age
+56
+32
+29
+27
+```
+
+Note that the column operations only work when there are no missing values. `hdax` will throw an error if you try to run any of these on a column with missing values.
+
+```haskell
 -- Note `Double` infers the type of the `mean` function, and not the type of `col "age" df`.
->>> mean $ col "age" df :: Double
+>>> mean $ col "age" $ rows [0..2] df :: Double
+
 39.0
 ```
 
 ```haskell
->>> median $ col "salary" df :: Double
+>>> median $ col "salary" $ rows [0..2] df :: Double
 56000.0
 ```
 

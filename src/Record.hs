@@ -57,14 +57,12 @@ class CsvField a where
 
 instance CsvField Int where
   convert (VInt x) = x
-  convert VNone = 0
   convert _ = error "Invalid conversion"
   toValue = VInt
 
 instance CsvField Double where
   convert (VDouble x) = x
   convert (VInt x) = fromIntegral x
-  convert VNone = 0
   convert _ = error "Invalid conversion"
   toValue = VDouble
 
