@@ -10,17 +10,18 @@ name,salary,age
 John,123123,56
 Mary,56000,32
 Erich,3200,29
+Philipp,,27
 ```
 
 ### Reading data into a DataFrame
 ```haskell
-module Main (main) where
-
-main :: IO ()
-main = do
-    -- Returns a `Frame` object
-    df <- readCsv "data/example.csv"
-    return ()
+>>> df <- readCsv "data/example.csv"
+>>> df
+name     salary  age
+John     123123  56
+Mary     56000   32
+Erich    3200    29
+Philipp          27
 ```
 
 ### Columns
@@ -45,6 +46,26 @@ main = do
 ```haskell
 >>> df !> 0 -- or `row 0 df`
 Record { salary: 123123, name: John, age: 56 }
+```
+
+### Dealing With Missing Values
+You can remove every element with missing values with the `dropna` function:
+```haskell
+>>> dropna "salary" df
+name   salary  age
+John   123123  56
+Mary   56000   32
+Erich  3200    29
+```
+You can also fill every missing value in a column with some predetermined value:
+```haskell
+>>> m = mean $ col "salary" df :: Double
+>>> fillna "salary" m df
+name     salary    age
+John     123123    56
+Mary     56000     32
+Erich    3200      29
+Philipp  45580.75  27
 ```
 
 ### `hmatrix` Integration
