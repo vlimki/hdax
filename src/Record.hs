@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Record (Record (..), convert, Value, CsvField, valueToR, field, fieldMaybe, toValue, isNull, set) where
@@ -25,7 +25,7 @@ instance Show Record where
     where
       kvPairs :: [(T.Text, T.Text)]
       kvPairs = Prelude.zip (M.keys i) (Prelude.map (T.pack . (convert @String)) $ M.elems i)
-      formattedKvPairs = Prelude.map (\(k,v) -> k <> ": " <> v) kvPairs
+      formattedKvPairs = Prelude.map (\(k, v) -> k <> ": " <> v) kvPairs
 
 instance Csv.FromNamedRecord Record where
   parseNamedRecord r = Record <$> Csv.parseNamedRecord r
@@ -34,7 +34,7 @@ field :: (CsvField a) => T.Text -> Record -> a
 field s r = Record.convert $ fromMaybe (error "Invalid field") $ M.lookup s $ inner r
 
 set :: (CsvField a) => T.Text -> a -> Record -> Record
-set k v (Record i) = Record{inner=M.insert k (toValue v) i}
+set k v (Record i) = Record{inner = M.insert k (toValue v) i}
 
 isNull :: T.Text -> Record -> Bool
 isNull s r = case fromMaybe (error "Invalid field") $ M.lookup s (inner r) of
