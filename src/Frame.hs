@@ -29,16 +29,19 @@ instance Show Frame where
     unwords (zipWith padRight longest $ V.toList $ V.map T.unpack h) ++ "\n" ++ unlines (V.toList $ V.map format recs)
     where
       format :: Record -> String
-      format (Record m) = unwords $ zipWith (\(_,v) len -> padRight len (show v)) (sortCols $ zip (M.keys m) (M.elems m)) longest
+      format (Record m) = unwords $ zipWith (\(_, v) len -> padRight len (show v)) (sortCols $ zip (M.keys m) (M.elems m)) longest
       kvPairsForLongest = sortCols $ concatMap (\(Record x) -> M.toList x) recsInner
       recsInner = V.toList recs
       getColumnIndex x = fromMaybe (error "Not possible") $ V.elemIndex x h
       sortCols = sortBy (\(ka, _) (kb, _) -> compare (getColumnIndex ka) (getColumnIndex kb))
       longest :: [Int]
-      longest = map (maximum . map (length . Record.convert @String . snd)) . groupBy ((==) `on` fst) $ kvPairsForLongest
+      longest = zipWith max headerLengths valueLengths
+      headerLengths = map (length . T.unpack) $ V.toList h
+      valueLengths = map (maximum . map (length . Record.convert @String . snd)) . groupBy ((==) `on` fst) $ kvPairsForLongest
+
 
 padRight :: Int -> String -> String
-padRight len str = str ++ replicate (len - length str) ' '
+padRight len str = str ++ replicate (len - length str + 1) ' '
 
 
 col :: (CsvField a) => T.Text -> Frame -> Series a
