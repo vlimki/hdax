@@ -1,11 +1,13 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Record (Record (..), convert, Value, CsvField, valueToR, field, fieldMaybe, toValue) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (mzero)
-import Data.ByteString as BS
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Csv as Csv
 import Data.HashMap.Strict as M
@@ -15,8 +17,16 @@ import qualified Data.Text as T
 import GHC.Generics hiding (R)
 import Numeric.LinearAlgebra (R)
 import Text.Read (readMaybe)
+import Data.Semigroup ((<>))
 
-newtype Record = Record {inner :: M.HashMap T.Text Value} deriving (Show, Eq)
+newtype Record = Record {inner :: M.HashMap T.Text Value} deriving (Eq)
+
+instance Show Record where
+  show (Record inner) = T.unpack $ "Record { " <> (T.intercalate ", " $ formattedKvPairs) <> " }"
+    where
+      kvPairs :: [(T.Text, T.Text)]
+      kvPairs = (Prelude.zip (M.keys inner) (Prelude.map (T.pack . (convert @String)) $ M.elems inner))
+      formattedKvPairs = Prelude.map (\(k,v) -> k <> ": " <> v) kvPairs
 
 instance Csv.FromNamedRecord Record where
   parseNamedRecord r = Record <$> Csv.parseNamedRecord r
