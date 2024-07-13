@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Lib (Frame, Record, Series, readCsv, col, row, Frame.filter, rows, cols) where
+module Lib (module Frame, module Record, module Series) where
 
 -- Write a proper test suite later instead of doing stuff here
 

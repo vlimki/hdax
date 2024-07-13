@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Frame (readCsv, Frame, Value, col, row, Series, cols, rows, toHMatrix, (!>), field, Frame.filter, dropna, fillna) where
+module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna) where
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
@@ -35,11 +35,11 @@ instance Show Frame where
       sortCols = sortBy (\(ka, _) (kb, _) -> compare (getColumnIndex ka) (getColumnIndex kb))
       longest :: [Int]
       longest = zipWith max headerLengths valueLengths
-      headerLengths = map (length . T.unpack) $ V.toList h
-      valueLengths = map (maximum . map (length . Record.convert @String . snd)) . groupBy ((==) `on` fst) $ kvPairsForLongest
+      headerLengths = map (Prelude.length . T.unpack) $ V.toList h
+      valueLengths = map (maximum . map (Prelude.length . Record.convert @String . snd)) . groupBy ((==) `on` fst) $ kvPairsForLongest
 
 padRight :: Int -> String -> String
-padRight len str = str ++ replicate (len - length str + 1) ' '
+padRight len str = str ++ replicate (len - Prelude.length str + 1) ' '
 
 dropna :: T.Text -> Frame -> Frame
 dropna c df@(Frame _ recs) = df{records = V.filter (isJust . fieldMaybe @String c) recs}
@@ -47,7 +47,7 @@ dropna c df@(Frame _ recs) = df{records = V.filter (isJust . fieldMaybe @String 
 fillna :: (CsvField a) => T.Text -> a -> Frame -> Frame
 fillna c v df@(Frame _ recs) = df{records = V.map (\x -> Record{inner = if isNothing (M.lookup c x) then M.insert c (toValue v) x else x}) $ V.map inner recs}
 
-col :: (CsvField a) => T.Text -> Frame -> Series a
+col :: (CsvField a) => T.Text -> Frame -> Series.Series a
 col c (Frame _ recs) = V.map (Record.convert . fromMaybe (error "Invalid column") . M.lookup c) $ V.map inner recs
 
 cols :: [T.Text] -> Frame -> Frame

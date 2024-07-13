@@ -28,6 +28,16 @@ main = do
 -- NOTE: The type for the `col` function must ALWAYS be explicitly specified.
 >>> col "name" df :: Series String
 ["John","Mary","Erich"]
+
+```haskell
+-- Note `Double` infers the type of the `mean` function, and not the type of `col "age" df`.
+>>> mean $ col "age" df :: Double
+39.0
+```
+
+```haskell
+>>> median $ col "salary" df :: Double
+56000.0
 ```
 
 ### Indexing
