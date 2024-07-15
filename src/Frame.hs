@@ -1,8 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna, Frame.drop) where
+module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna, Frame.drop, bin) where
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
@@ -41,9 +42,15 @@ instance Show Frame where
 padRight :: Int -> String -> String
 padRight len str = str ++ replicate (len - Prelude.length str + 1) ' '
 
+-- c = column name to bin
+-- bins = functions that test if the column fills some predicate
+-- hs = new bin column headers. length must match the length of `bins`
+bin :: (CsvField a) => T.Text -> [a -> Bool] -> [T.Text] -> Frame -> Frame
+bin c bins binHeaders (Frame hs recs) = Frame {headers = (V.concat [hs, V.fromList binHeaders]), records=V.map (\r -> foldl (\r' (h, b) -> Record{inner=if b (get c r') == True then M.insert h (VDouble 1.0) (inner r') else M.insert h (VDouble 0.0) (inner r')}) r $ zip binHeaders bins) recs}
+
 drop :: [T.Text] -> Frame -> Frame
 drop columns (Frame hs recs) = Frame{headers=V.filter (\h -> not $ h `elem` columns) hs, records=dropHelper columns recs}
-  where 
+  where
     dropHelper :: [T.Text] -> V.Vector Record -> V.Vector Record
     dropHelper [c] rs = V.map (\r -> del c r) rs
     dropHelper [] rs = rs

@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Record (Record (..), convert, Value, CsvField, valueToR, get, del, fieldMaybe, toValue, isNull, set) where
+module Record (Record (..), convert, Value (..), CsvField, valueToR, get, del, fieldMaybe, toValue, isNull, set) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (mzero)
