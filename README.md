@@ -80,6 +80,16 @@ Erich    3200      29
 Philipp  45580.75  27
 ```
 
+### Binning
+```haskell
+>>> bin "age" [(>30), (<30)] ["over30", "under30"] df
+name     salary  age  over30  under30 
+John     123123  56   1.0     0.0
+Mary     56000   32   1.0     0.0
+Erich    3200    29   0.0     1.0
+Philipp          27   0.0     1.0
+```
+
 ### `hmatrix` Integration
 ```haskell
 -- This matrix can be fed directly to a machine learning model, for example.
