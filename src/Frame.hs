@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna, Frame.drop, bin) where
+module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna, Frame.drop, bin, Frame.length) where
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
@@ -77,6 +77,9 @@ cols c (Frame _ recs) = Frame{headers = V.fromList c, records = V.map (\r -> Rec
 
 filter :: (Record -> Bool) -> Frame -> Frame
 filter f df@(Frame _ recs) = df{records = V.filter f recs}
+
+length :: Frame -> Int
+length (Frame _ recs) = V.length recs
 
 toHMatrix :: Frame -> Matrix R
 toHMatrix (Frame h recs) = (c >< r) $ concat $ V.toList (V.map (map valueToR . M.elems) $ V.map inner recs) :: Matrix R

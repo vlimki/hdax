@@ -1,4 +1,6 @@
 - [ ] ML utilities - one-hot encoding, binning, normalization, polynomial features, etc.
+- [ ] Mode, stddev, correlation, covariance
+- [ ] Merging, joining, concatenating dataframes
 - [ ] Make a separate function for printing CsvFields as opposed to just using the regular string conversion.
 - [ ] Write a test suite
 
