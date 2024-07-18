@@ -90,6 +90,16 @@ Erich    3200    29   0.0     1.0
 Philipp          27   0.0     1.0
 ```
 
+### One-Hot Encoding
+```haskell
+>>> encode "name" df
+name     salary  age  name_John  name_Mary  name_Erich  name_Philipp
+John     123123  56   1.0        0.0        0.0         0.0
+Mary     56000   32   0.0        1.0        0.0         0.0
+Erich    3200    29   0.0        0.0        1.0         0.0
+Philipp          27   0.0        0.0        0.0         1.0
+```
+
 ### `hmatrix` Integration
 ```haskell
 -- This matrix can be fed directly to a machine learning model, for example.
