@@ -2,8 +2,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna, Frame.drop, bin, Frame.length) where
+module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna, Frame.drop, bin, Frame.length, Frame.map, encode) where
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
@@ -36,11 +37,14 @@ instance Show Frame where
       sortCols = sortBy (\(ka, _) (kb, _) -> compare (getColumnIndex ka) (getColumnIndex kb))
       longest :: [Int]
       longest = zipWith max headerLengths valueLengths
-      headerLengths = map (Prelude.length . T.unpack) $ V.toList h
-      valueLengths = map (maximum . map (Prelude.length . Record.convert @String . snd)) . groupBy ((==) `on` fst) $ kvPairsForLongest
+      headerLengths = Prelude.map (Prelude.length . T.unpack) $ V.toList h
+      valueLengths = Prelude.map (maximum . Prelude.map (Prelude.length . Record.convert @String . snd)) . groupBy ((==) `on` fst) $ kvPairsForLongest
 
 padRight :: Int -> String -> String
 padRight len str = str ++ replicate (len - Prelude.length str + 1) ' '
+
+map :: (Record -> Record) -> Frame -> Frame
+map f df@(Frame _ recs) = df{records=V.map f recs}
 
 -- c = column name to bin
 -- bins = functions that test if the column fills some predicate
@@ -50,6 +54,16 @@ bin c bins binHeaders (Frame hs recs) =
   Frame
     { headers = V.concat [hs, V.fromList binHeaders]
     , records = V.map (\r -> foldl (\r' (h, b) -> Record{inner = M.insert h (VDouble (if b (get c r') then 1.0 else 0.0)) (m r')}) r bhPairs) recs
+    }
+  where
+    m = inner
+    bhPairs = zip binHeaders bins
+
+binValue :: T.Text -> [Value -> Bool] -> [T.Text] -> Frame -> Frame
+binValue c bins binHeaders (Frame hs recs) =
+  Frame
+    { headers = V.concat [hs, V.fromList binHeaders]
+    , records = V.map (\r -> foldl (\r' (h, b) -> Record{inner = M.insert h (VDouble (if b (getValue c r') then 1.0 else 0.0)) (m r')}) r bhPairs) recs
     }
   where
     m = inner
@@ -72,6 +86,16 @@ fillna c v df@(Frame _ recs) = df{records = V.map (\x -> if isNull c x then set 
 col :: (CsvField a) => T.Text -> Frame -> Series.Series a
 col c (Frame _ recs) = V.map (Record.convert . fromMaybe (error "Invalid column") . M.lookup c) $ V.map inner recs
 
+colValue :: T.Text -> Frame -> Series.Series Value
+colValue c (Frame _ recs) = V.map (fromMaybe (error "Invalid column") . M.lookup c) $ V.map inner recs
+
+-- V.map (\v -> (\a -> a == v)) values
+encode :: T.Text -> Frame -> Frame
+encode c df = binValue c (V.toList $ V.map (\v -> (== v)) values) (Prelude.map T.pack $ V.toList hs) df
+  where
+    values = colValue c df
+    hs = V.map ((++) (T.unpack c ++ "_") . show) values
+
 cols :: [T.Text] -> Frame -> Frame
 cols c (Frame _ recs) = Frame{headers = V.fromList c, records = V.map (\r -> Record{inner = r}) $ V.map (M.filterWithKey (\k _ -> k `elem` c)) $ V.map inner recs}
 
@@ -82,7 +106,7 @@ length :: Frame -> Int
 length (Frame _ recs) = V.length recs
 
 toHMatrix :: Frame -> Matrix R
-toHMatrix (Frame h recs) = (c >< r) $ concat $ V.toList (V.map (map valueToR . M.elems) $ V.map inner recs) :: Matrix R
+toHMatrix (Frame h recs) = (c >< r) $ concat $ V.toList (V.map (Prelude.map valueToR . M.elems) $ V.map inner recs) :: Matrix R
   where
     (r, c) = (V.length h, V.length recs)
 

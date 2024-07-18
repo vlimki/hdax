@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Record (Record (..), convert, Value (..), CsvField, valueToR, get, del, fieldMaybe, toValue, isNull, set) where
+module Record (Record (..), convert, Value (..), CsvField, valueToR, get, del, fieldMaybe, toValue, isNull, set, getValue) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (mzero)
@@ -32,6 +32,9 @@ instance Csv.FromNamedRecord Record where
 
 get :: (CsvField a) => T.Text -> Record -> a
 get s r = Record.convert $ fromMaybe (error "Invalid field") $ M.lookup s $ inner r
+
+getValue :: T.Text -> Record -> Value
+getValue s r = fromMaybe (error "Invalid field") $ M.lookup s $ inner r
 
 set :: (CsvField a) => T.Text -> a -> Record -> Record
 set k v (Record i) = Record{inner = M.insert k (toValue v) i}
