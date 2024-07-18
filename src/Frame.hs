@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna, Frame.drop, bin, Frame.length, Frame.map, encode) where
 
@@ -93,8 +92,8 @@ colValue c (Frame _ recs) = V.map (fromMaybe (error "Invalid column") . M.lookup
 encode :: T.Text -> Frame -> Frame
 encode c df = binValue c (V.toList $ V.map (\v -> (== v)) values) (Prelude.map T.pack $ V.toList hs) df
   where
-    values = colValue c df
-    hs = V.map ((++) (T.unpack c ++ "_") . show) values
+    values = V.filter (/= VNone) $ colValue c df
+    hs = V.filter (/= "") $ V.map ((++) (T.unpack c ++ "_") . show) values
 
 cols :: [T.Text] -> Frame -> Frame
 cols c (Frame _ recs) = Frame{headers = V.fromList c, records = V.map (\r -> Record{inner = r}) $ V.map (M.filterWithKey (\k _ -> k `elem` c)) $ V.map inner recs}
