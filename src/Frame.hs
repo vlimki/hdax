@@ -43,20 +43,19 @@ padRight :: Int -> String -> String
 padRight len str = str ++ replicate (len - Prelude.length str + 1) ' '
 
 map :: (Record -> Record) -> Frame -> Frame
-map f df@(Frame _ recs) = df{records=V.map f recs}
+map f df@(Frame _ recs) = df{records = V.map f recs}
 
 apply :: (CsvField a, CsvField b) => T.Text -> (a -> b) -> Frame -> Frame
-apply c f df = Frame.map (\r -> set c (f $ get c r) r) df
+apply c f = Frame.map (\r -> set c (f $ get c r) r)
 
 -- TODO
 sort = id
 
 normalize :: (CsvField a, Eq a) => T.Text -> (Series a -> Series a) -> Frame -> Frame
-normalize c f df = apply c (\x -> snd $ new V.! fromMaybe (error "Not possible") (V.findIndex (\(a,_) -> x == a) new)) df
+normalize c f df = apply c (\x -> snd $ new V.! fromMaybe (error "Not possible") (V.findIndex (\(a, _) -> x == a) new)) df
   where
     new = V.zip old $ f old
     old = col c df
-
 
 minMax :: (Fractional a, Ord a) => Series a -> Series a
 minMax s = V.map (\x -> (x - Series.min s) / (Series.max s - Series.min s)) s
