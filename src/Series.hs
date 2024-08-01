@@ -1,4 +1,4 @@
-module Series (Series, mean, median, Series.sum, Series.max, Series.min) where
+module Series (Series, mean, median, Series.sum, Series.max, Series.min, stddev, minMax, zScore) where
 
 import Data.List (sort)
 import qualified Data.Vector as V
@@ -25,5 +25,17 @@ max s = maximum $ V.toList s
 min :: (Ord a) => Series a -> a
 min s = minimum $ V.toList s
 
---normalize :: (Fractional a) => Series a -> Series a
---normalize =
+stddev :: (Floating a) => Series a -> a
+stddev s = sqrt ((1/n) * V.sum (V.map (\x -> (x - mu) ** 2) s))
+  where
+    mu = mean s
+    n = fromIntegral $ V.length s
+
+minMax :: (Fractional a, Ord a) => Series a -> Series a
+minMax s = V.map (\x -> (x - Series.min s) / (Series.max s - Series.min s)) s
+
+zScore :: (Floating a) => Series a -> Series a
+zScore s = V.map (\x -> (x - mu) / sigma) s
+  where
+    mu = mean s
+    sigma = stddev s

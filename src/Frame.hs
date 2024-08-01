@@ -14,6 +14,8 @@ import Data.Maybe (fromMaybe, isJust)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Vector as V
+--import qualified Data.Vector.Algorithms.Intro as VA
+
 import Numeric.LinearAlgebra (Matrix, R, (><))
 import Record
 import Series
@@ -49,16 +51,14 @@ apply :: (CsvField a, CsvField b) => T.Text -> (a -> b) -> Frame -> Frame
 apply c f = Frame.map (\r -> set c (f $ get c r) r)
 
 -- TODO
-sort = id
+--sort :: (Ord a) => T.Text -> Frame -> Frame
+sort c df = df
 
 normalize :: (CsvField a, Eq a) => T.Text -> (Series a -> Series a) -> Frame -> Frame
 normalize c f df = apply c (\x -> snd $ new V.! fromMaybe (error "Not possible") (V.findIndex (\(a, _) -> x == a) new)) df
   where
     new = V.zip old $ f old
     old = col c df
-
-minMax :: (Fractional a, Ord a) => Series a -> Series a
-minMax s = V.map (\x -> (x - Series.min s) / (Series.max s - Series.min s)) s
 
 -- c = column name to bin
 -- bins = functions that test if the column fills some predicate
