@@ -1,4 +1,4 @@
-module Series (Series, mean, median, Series.sum) where
+module Series (Series, mean, median, Series.sum, Series.max, Series.min) where
 
 import Data.List (sort)
 import qualified Data.Vector as V
@@ -18,3 +18,12 @@ median s = sort (V.toList s) !! (n `div` 2)
 
 sum :: (Num a) => Series a -> a
 sum = V.sum
+
+max :: (Ord a) => Series a -> a
+max s = maximum $ V.toList s
+
+min :: (Ord a) => Series a -> a
+min s = minimum $ V.toList s
+
+--normalize :: (Fractional a) => Series a -> Series a
+--normalize =

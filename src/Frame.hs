@@ -45,6 +45,12 @@ padRight len str = str ++ replicate (len - Prelude.length str + 1) ' '
 map :: (Record -> Record) -> Frame -> Frame
 map f df@(Frame _ recs) = df{records=V.map f recs}
 
+apply :: (CsvField a, CsvField b) => T.Text -> (a -> b) -> Frame -> Frame
+apply c f df = Frame.map (\r -> set c (f $ get c r) r) df
+
+normalize :: Frame -> Frame
+normalize = id
+
 -- c = column name to bin
 -- bins = functions that test if the column fills some predicate
 -- hs = new bin column headers. length must match the length of `bins`
