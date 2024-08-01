@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toHMatrix, (!>), Frame.filter, dropna, fillna, Frame.drop, bin, Frame.length, Frame.map, encode) where
+module Frame (module Record, module Series, readCsv, Frame, col, row, cols, rows, toMatrix, (!>), Frame.filter, dropna, fillna, Frame.drop, bin, Frame.length, Frame.map, encode, normalize, minMax) where
 
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
@@ -35,7 +35,7 @@ instance Show Frame where
       getColumnIndex x = fromMaybe (error "Not possible") $ V.elemIndex x h
       sortCols = sortBy (\(ka, _) (kb, _) -> compare (getColumnIndex ka) (getColumnIndex kb))
       longest :: [Int]
-      longest = zipWith max headerLengths valueLengths
+      longest = zipWith Prelude.max headerLengths valueLengths
       headerLengths = Prelude.map (Prelude.length . T.unpack) $ V.toList h
       valueLengths = Prelude.map (maximum . Prelude.map (Prelude.length . Record.convert @String . snd)) . groupBy ((==) `on` fst) $ kvPairsForLongest
 
@@ -48,8 +48,18 @@ map f df@(Frame _ recs) = df{records=V.map f recs}
 apply :: (CsvField a, CsvField b) => T.Text -> (a -> b) -> Frame -> Frame
 apply c f df = Frame.map (\r -> set c (f $ get c r) r) df
 
-normalize :: Frame -> Frame
-normalize = id
+-- TODO
+sort = id
+
+normalize :: (CsvField a, Eq a) => T.Text -> (Series a -> Series a) -> Frame -> Frame
+normalize c f df = apply c (\x -> snd $ new V.! fromMaybe (error "Not possible") (V.findIndex (\(a,_) -> x == a) new)) df
+  where
+    new = V.zip old $ f old
+    old = col c df
+
+
+minMax :: (Fractional a, Ord a) => Series a -> Series a
+minMax s = V.map (\x -> (x - Series.min s) / (Series.max s - Series.min s)) s
 
 -- c = column name to bin
 -- bins = functions that test if the column fills some predicate
@@ -110,8 +120,8 @@ filter f df@(Frame _ recs) = df{records = V.filter f recs}
 length :: Frame -> Int
 length (Frame _ recs) = V.length recs
 
-toHMatrix :: Frame -> Matrix R
-toHMatrix (Frame h recs) = (c >< r) $ concat $ V.toList (V.map (Prelude.map valueToR . M.elems) $ V.map inner recs) :: Matrix R
+toMatrix :: Frame -> Matrix R
+toMatrix (Frame h recs) = (c >< r) $ concat $ V.toList (V.map (Prelude.map valueToR . M.elems) $ V.map inner recs) :: Matrix R
   where
     (r, c) = (V.length h, V.length recs)
 
